@@ -94,26 +94,3 @@ mark.no {
 	background-color: #ffe4e1;
 	color: #b31d28;
 }
-
-/*Контакты*/
-/*Иконки Font Awesome*/ 
-.fa-envelope,
-.fa-facebook {
-	margin-right: 10px;
-}
-
-/*Убираем подчёркивание у иконок Font Awesome в ссылках*/
-a.fa-icon {
-	background: none;
-}
-
-/*Контейнер для контактов*/
-.contacts ul {
-	display: block;
-	width: 100%;
-}
-
-/*Блоки контактов*/
-.contacts li {
-  display: inline-block;
-}
