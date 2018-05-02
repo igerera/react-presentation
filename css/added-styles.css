@@ -1,0 +1,119 @@
+/*Стили для презентации по React. Тема ribbon*/
+
+/*Светло-серая подсветка имён элементов*/
+/*Основной текст*/
+mark.highliter {
+	background: rgba(27,31,35,0.05);
+	border-radius: 3px;
+	color: #666666;
+}
+
+/*Комментарий*/
+mark.highliter-comment {
+	background: rgba(27,31,35,0.05);
+	border-radius: 3px;
+	color: #979a9e;
+}
+
+/*Блок ответа с боковой планкой*/
+p.answer {
+	display: block;
+	padding-left: 25px;
+	border-left: 7px solid;
+	border-left-color: rgba(27,31,35,0.05);
+	color: #979a9e;
+}
+
+
+/*Список в Выводах, разбитый на два слайда*/
+ol.start {
+	counter-reset: mycounter;
+}
+
+ol.start li,
+ol.continue li {
+	list-style: none;
+}
+
+ol.start li::before {	
+	content: counter(mycounter) ". ";
+	counter-increment: mycounter;
+}
+
+ol.continue {
+	counter-reset: mycounter 4;
+}
+
+ol.continue li::before {
+	content: counter(mycounter) ". ";
+	counter-increment: mycounter;
+}
+
+/*Прочее*/
+/*Line-height в абзацах, чтобы подсвеченные элементы не соприкасались нижними и верхними границами*/
+.slide p {
+	margin-bottom: 1em;
+	line-height: 1.6em;
+}
+
+/*Line-height в списках, чтобы подсвеченные элементы не соприкасались нижними и верхними границами*/
+.slide ul li,
+.slide ol li  {
+	line-height: 1.6em;
+}
+
+/*Заголовки разделов*/
+h2.slide-caption {
+	padding-top: 1.5em;
+	font-size: 3.5em;
+}
+
+
+/*Ссылки на Fotorama и Chosen*/
+/*Убираем подчёркивание ссылки в статичном состоянии*/
+a.underline-none {
+	background: none;
+}
+
+/*Добавляем подчёркивание при наведении курсора*/
+a.underline-none:hover {
+	text-decoration: underline;
+  text-decoration-line: underline;
+  text-decoration-style: initial;
+  text-decoration-color: initial;
+}
+
+
+/*Маркеры в коде: Интеграция с jQuery-плагином Chosen-Добивка*/
+mark.yes {
+	background-color: #bdffce;
+	color: #22863a;
+}
+
+mark.no {
+	background-color: #ffe4e1;
+	color: #b31d28;
+}
+
+/*Контакты*/
+/*Иконки Font Awesome*/ 
+.fa-envelope,
+.fa-facebook {
+	margin-right: 10px;
+}
+
+/*Убираем подчёркивание у иконок Font Awesome в ссылках*/
+a.fa-icon {
+	background: none;
+}
+
+/*Контейнер для контактов*/
+.contacts ul {
+	display: block;
+	width: 100%;
+}
+
+/*Блоки контактов*/
+.contacts li {
+  display: inline-block;
+}
