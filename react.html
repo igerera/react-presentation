@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <title>React и другие библиотеки</title>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="node_modules/shower-ribbon/styles/screen-4x3.css">
+  <link rel="stylesheet" href="css/prism.css">
+  <link rel="stylesheet" href="css/prism-fix.css">
+  <link rel="stylesheet" href="css/netology.css">
+  <link rel="stylesheet" href="css/fake-browser.css">
+  <link rel="stylesheet" href="css/react.css">
+  <link rel="stylesheet" href='css/added-styles.css'>
+  <link rel="shortcut icon" href="i/favicon.ico" type="image/x-icon">
+</head>
+<body class="shower list">
+  <header class="caption">
+    <h1>React и другие библиотеки</h1>
+    <p>Дмитрий Фитискин, Head of Netology.Code</p>
+  </header>
+
+  <section class="slide" id="cover">
+    <h2>React и другие библиотеки</h2>
+    <p>
+      <img src="pic/dfitiskin.jpg" alt="Д. Фитискин" class="avatar">
+      Дмитрий Фитискин <span class="position">Head of Netology.Code</span>
+    </p>
+  </section>
+
+  <section class="slide author contacts" id="author">
+    <img src="pic/dfitiskin.jpg" alt="Д. Фитискин">
+    <h1>Дмитрий Фитискин</h1>
+    <p class="position">Head of Netology.Code</p>
+    <ul class="fa ul">
+      <li><a href="mailto:" class="fa-icon"><i class="far fa-envelope"></i></a><a href="mailto:">e-mail</a></li>
+      <li><a href="http://facebook.com/dfitiskin" class="fa-icon"><i class="fab fa-facebook"></i></a><a href="http://facebook.com/dfitiskin">facebook.com/dfitiskin</a></li>
+    </ul>
+  </section>
+
+  <section class="slide">
+    <h2>План занятия</h2>
+    <ol>
+      <li><a href="#point-1">Что такое React?</a></li>
+      <li><a href="#point-2">Замена рендеринга, основанного на строках на React-компонент</a></li>
+      <li><a href="#point-3">Интеграция с внешней галереей</a></li>
+      <li><a href="#point-4">Добавление интерактивной карты в React-приложение</a></li>
+      <li><a href="#point-5">Несколько карт на странице</a></li>
+      <li><a href="#point-6">Интеграция с jQuery-плагином Chosen</a></li>
+      <li><a href="#point-7">Исправление ошибки в компоненте Fotorama</a></li>
+      <li><a href="#point-8">Передача событий из jQuery</a></li>
+      <li><a href="#point-9">Добавление на интерактивную карту точек</a></li>
+      <li><a href="#point-10">Выводы</a></li>
+    </ol>
+  </section>
+
+  <section class="slide" id="point-1">
+    <h2 class="slide-caption">Что такое React?</h2>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p><b>React</b> — библиотека решающая очень узкую задачу: создание и обновление DOM дерева приложения. При этом она не имеет встроенных решений других задач приложения, таких как получение данных, обработка событий, и не накладывает никаких ограничений на их реализацию. Поэтому React подходит для использования в любых приложениях. Его можно встроить в приложения, использующие другие библиотеки, и другие библиотеки можно встроить в React-приложения.</p>
+    <p>На занятии мы рассмотрим наиболее интересные варианты использования: интеграция с интерактивными картами, с библиотекой jQuery, с готовым решением для фотогаллерей Фоторама и с чистым DOM API. На этих примерах мы разберем общий подход к интеграции приложения с библиотекой React.</p>
+  </section>
+
+  <section class="slide" id="point-2">
+    <h2 class="slide-caption">Замена рендеринга, основанного <br>на строках на React-компонент</h2>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Начнём с самого распространенного случая, когда часть данных для веб-страницы мы получаем ассинхронно, например в формате JSON, и эти данные нам нужно представить на странице.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Задача</h2>
+    <p>У нас есть сайт, на котором в одном из блоков показываются последние фотографии из Instagram:</p>
+    <pre><code class="language-js line-numbers">
+      function fetchPhotos() {
+        // …
+      }
+
+      fetchPhotos().then(images => {
+        const body = images
+          .map(image => `&lt;img src="${image.url}" /&gt;`)
+          .join(' ');
+        document.querySelector('.instagram').innerHTML = body;
+      })
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Функция <mark class="highliter">fetchPhotos</mark> запрашивает фотографии из API и возвращает промис с массивом этих фотографий. Далее мы формируем html-структуру этого блока в виде простой строки. И помещаем её в тело тега с классом <mark class="highliter">instagram</mark>.
+
+    В планах у нас полностью перевести сайт на React. Но мы можем делать это маленькими шагами. Так как этот блок независимый, то мы можем начать с него, создав React-компонент. Но как нам поместить этот компонент на страницу?</p>
+  </section>
+
+  <section class="slide">
+    <h2>Теория</h2>
+    <p>Ответ на этот вопрос нам известен еще с первого занятия. В библиотеке <mark class="highliter">ReactDOM</mark> есть функция <mark class="highliter">render</mark>, который позволяет поместить компонент или JSX в конкретный DOM-узел страницы. В рамках курса мы в основном создавали приложения, которые целиком контролируют DOM-дерево страницы. Но ничто не мешает нам поместить созданный нами компонент не в корневой узел, а например в какой-то более глубокий, например в блок с классом <mark class="highliter">intagram</mark>. При этом остальная часть дерева может контролироваться другими библиотеками.</p>
+  </section>  
+
+  <section class="slide">
+    <h2>Решение</h2>
+    <p>Для этого нам нужно получить нужный узел и передать его в функцию <mark class="highliter">render</mark>:</p>
+    <pre><code class="language-js">
+      const node = document.querySelector('.instagram');
+      ReactDOM.render(&lt;Intagram /&gt;, node);
+    </code></pre>
+  </section>
+
+
+  <section class="slide">
+    <pre><code class="language-js line-numbers">
+      class Intagram extends React.Component {
+        constructor(props) {
+          super(props);
+          this.state = { images: [] };
+        }
+
+        componentWillMount() {
+          fetchPhotos.then(images => this.setState({ images }));
+        }
+
+        renderImage(image) {
+          return &lt;img src={image.url} key={image.id} /&gt;
+        }
+
+        render() {
+          const { images } = this.state;
+          return (
+            &lt;div&gt;
+              {images.map(this.renderImage}
+            &lt;/div&gt;
+          );
+        }
+      }
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p><b>Вопрос:</b> Почему мы добавили изображению атрибут <mark class="highliter">key?</mark></p>
+    <p class="answer next">Потому что мы генерируем список узлов, и чтобы React оптимально мог сравнивать их мы добавляем уникальный ключ, который не изменится при сортировке списка и при добавлении или удалении узлов.</p>
+    
+
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>В текущей задаче преимущество React-компонента не очевидно. Но давайте подумаем о перспективах. Так как теперь у нас полноценный React-компонент, то мы можем:</p>
+    <ul>
+      <li>реализовать ручное обновление фотографий с помощью кнопки «обновить»</li>
+      <li>или реализовать автоматическое обновление по таймеру</li>
+      <li>добавить прелоадер для блока на время, пока изображения загружаются</li>
+      <li>сделать компонент более универсальным и повторно использовать, задавая имя пользователя Instagram через <mark class="highliter">props</mark>.</li>
+    </ul>
+    <p>При этом мы описываем только логику работы компонента и как должен формироваться DOM. А всю оптимизацию и безопасность берет на себя React.</p>
+
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p><b>Вопрос:</b> Почему использование <mark class="highliter">innerHTML</mark> считается небезопасным?</p>
+    <p class="answer next">Установка <mark class="highliter-comment">innerHTML</mark> из кода имеет риск быть подверженным XSS атакам, когда в пользовательский контент внедряются скрипты и другие элементы, которые могут привести к потере данных пользователя, распространению вредоносного программного обеспечения.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Добивка</h2>
+    <p>Функцию <mark class="highliter">render</mark> можно вызывать многократно, добавляя компоненты в разные узлы DOM-дерева:</p>
+    <pre><code class="language-js line-numbers">
+      const nikestagram = document.querySelector('.nikestagram');
+      ReactDOM.render(&lt;Intagram user="nike" /&gt;, nikestagram);
+
+      const nikewomenstagram = document.querySelector('.nikewomenstagram');
+      ReactDOM.render(&lt;Intagram user="nikewomen" /&gt;, nikewomenstagram);
+
+      const cart = document.querySelector('.cart');
+      ReactDOM.render(&lt;Cart /&gt;, cart);
+
+      const user = document.querySelector('.user');
+      ReactDOM.render(&lt;Profile /&gt;, user);
+    </code></pre>
+    <p>Таким образом мы можем постепенно переводить отдельные элементы страницы на React.</p>
+  </section>
+
+  <section class="slide" id="point-3">
+    <h2 class="slide-caption">Интеграция<br> с внешней галереей</h2>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Иногда бывают и обратные ситуации: интерфейс уже реализован на React, но мы хотим использовать готовое решение, которое реализовано не на React.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Задача</h2>
+    <p>Представим, что у нас есть React-приложение, в котором реализован личный кабинет пользователя. К следующему релизу необходимо добавить туда возможность просматривать все фотографии, которые относятся к пользователю. Из-за сроков было принято решение воспользоваться готовым решением <a href="http://fotorama.io" class="underline-none">Fotorama</a>.</p>
+    <p>Фоторама использует уже созданные узлы DOM-дерева, для создания поверх них фотогаллерею, добавляя дополнительные узлы для управления.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Проблема</h2>
+    <p>Как интегрировать готовое решение, работающее с DOM, реализованное без использования React в приложение на React?</p>
+  </section>
+
+  <section class="slide">
+    <h2>Теория</h2>
+    <p>Вспомним, что React — библиотека, которая берет на себя только задачу управления DOM-деревом документа. А точнее поддеревьями конкретных узлов. При этом не накладывает особых ограничений на их дальнейшее использование.<p>
+
+    <p>Поэтому мы можем обернуть библиотеку Fotorama в React-компонент, который создаст необходимые DOM-узлы для фотографий, а дальше библиотека сделает своё дело. Использовать этот компонент мы сможем например так:</p>
+    <pre><code class="language-js">
+      &lt;Fotorama images={photos} /&gt;
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2>Решение</h2>
+    <p>Создадим функциональный компонент:</p>
+    <pre><code class="language-js line-numbers">
+      const Fotorama = ({ images }) => (
+      &lt;div className="fotorama"&gt;
+      {images.map(image => (
+        &lt;img src={image.src} key={image.id} /&gt;
+      ))}
+    &lt;/div&gt;
+  );
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Наш компонент принимает массив изображений и создает для каждого тег <mark class="highliter">&lt;img /&gt;</mark>.</p>
+    <p>Следуя документации, контейнер должен содержать класс <mark class="highliter">fotorama</mark>, поэтому мы так же добавили его в <mark class="highliter">&lt;div /&gt;</mark>, который возвращает наш компонент. Остаётся добавить добавить следующие теги:</p>
+    <pre><code class="language-js">
+      &lt;script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"&gt;&lt;/script&gt;
+      &lt;link href="http://cdnjs.cloudflare.com/ajax/libs/fotorama/4.6.4/fotorama.css" rel="stylesheet"&gt;
+      &lt;script src="http://cdnjs.cloudflare.com/ajax/libs/fotorama/4.6.4/fotorama.js"&gt;&lt;/script&gt;
+    </code></pre>
+    <p>Мы выполнили все шаги из документации к библиотеке, но не получили ожидаемого результата: изображения создаются, но Fotorama не создаёт галерею поверх них.</p>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p><b>Вопрос:</b> Может быть, у кого-то из вас есть предположение почему галерея не работает?</p>
+    <p class="answer next">Библиотека Fotorama так устроена, что в момент загрузки страницы она находит все контейнеры с классом <mark class="highliter-comment">fotorama</mark> и инициализирует фотогалерею в них. Но наш компонент <mark class="highliter-comment">Fotorama</mark> видимо создал узлы чуть позже, и поэтому в момент инициализации они еще не были доступны.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Добивка</h2>
+    <p>Мы сможем исправить работу галереи далее. Но этот пример позволил нам сделать один из главных выводов интеграции в React других библиотек, работающих с DOM: инициализировать эти библиотеки необходимо после того, как компонент сформирует своё DOM-поддерево.</p>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p><b>Вопрос:</b> Как можно выполнить какой-то код, после того как поддерево DOM компонента будет готово и доступно в документе?</p>
+    <p class="answer next">Для этого у каждого компонента есть методы жизненного цикла этого компонента.</p>
+    <p class="next">Когда дерево DOM компонентов готово и доступно в документе, в компоненте вызывается метод <mark class="highliter">componentDidMount</mark>. Выходит, что для таких компонентов нам не подойдут функциональные компоненты. Мы будем использовать компоненты, реализованные на основе классов.</p>
+  </section>
+
+  <section class="slide" id="point-4">
+    <h2 class="slide-caption">Добавление интерактивной карты в React-приложение</h2>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Отвлечемся немного от фотогалереи, но попробуем учесть полученный опыт при реализации компонента интерактивной карты.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Задача</h2>
+    <p>Очень часто в разделе «Контакты» отображается адрес компании. Еще иногда дизайнер рисует схему проезда. Но если дизайнер не картограф, то пользы от такой схемы клиентам будет не много. Поэтому часто вместо схемы помещают блок картой Google или Яндекс, на которой указывают точку, где расположен офис.</p>
+    <p>Давайте попробуем решить эту задачу, создав компонент, который будет добавлять на страницу Яндекс-карту. Сам компонент мы будем использовать примерно вот так:</p>
+    <pre><code class="language-js">
+      &lt;Map center={[55.76, 37.64]} zoom={10} /&gt;
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Мы планируем передавать в компонент два атрибута:</p>
+    <ul>
+      <li><mark class="highliter">center</mark> — это координаты точки, в которой расположен офис, чтобы, если вдруг компания переедет (так часто бывает), мы смогли его поменять, не меняя сам компонент,</li>
+      <li><mark class="highliter">zoom</mark> — исходный масштаб карты, чтобы мы могли показывать более детализированную карту района или менее подробную карту города, и опять же не менять сам компонент при этих экспериментах.</p></li>
+    </ul>
+  </section>
+
+  <section class="slide">
+    <h2>Теория</h2>
+    <p>В данной задаче интеграция неизбежна, потому что в отличие от фотогалереи, нет возможности создать компонент карты полностью на React. И нам потребуется метод <mark class="highliter">componentDidMount</mark> жизненного цикла для инициализации карты после того как его контейнер будет помещен в DOM-дерево документа. Поэтому мы будем создавать компонент на основе класса.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Решение</h2>
+    <p>Начнем с подключения библиотеки карты. Он дает доступ к глобальной переменной <mark class="highliter">ymaps</mark>.</p>
+    <pre><code class="language-js">&lt;script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"&gt;&lt;/script&gt;</code></pre>
+    <p>Реализуем простой компонент который создаст и вернёт контейнер для карты:</p>
+    <pre><code class="language-js line-numbers">
+      class Map extends React.Component {
+        render() {
+          return (
+            &lt;div&gt;id="map">&lt;/div&gt;
+          );
+        }
+      }
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Добавим инициализацию карты в методе <mark class="highliter">componentDidMount</mark>:</p>
+    <pre><code class="language-js line-numbers">
+      componentDidMount() {
+        const { center, zoom } = this.props;
+        ymaps.ready(() => {
+          this.map = new ymaps.Map('map', {
+            center,
+            zoom
+          });
+        });
+      }
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Тут мы инициализируем карту вызвав метод библиотеки <mark class="highliter">ymaps.Map</mark>, передав следующие аргументы:</p>
+    <ul>
+      <li>идентификатор контейнера — <mark class="highliter">'map'</mark>, в который поместить карту. Мы добавили атрибут <mark class="highliter">id</mark> с таким же текстом контейнеру.</li>
+      <li>объект со свойствами карты, указав свойства <mark class="highliter">zoom</mark> — масштаб, и <mark class="highliter">center</mark> — где будет центр карты, берем его из атрибутов компонента <mark class="highliter">this.props.center</mark>.</li>
+    </ul>
+    <p>Присваиваем результат свойству объекта <mark class="highliter">map</mark>. Возможно, нам потом потребуется доступ к объекту карты в других методах компонента. Теперь компонент отображается и решает поставленные задачи.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Добивка</h2>
+    <p><b>Вопрос:</b> Как поведет себя компонент, если при очередном ререндере его <mark class="highliter">props</mark> обновятся?</p>
+    <p class="answer next">Ничего не изменится, так как в этом случае дерево DOM компонента не поменяется, и метод <mark class="highliter-comment">componentDidMount</mark> не будет вызван.</p>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Для того чтобы исправить эту проблему вам необходимо реализовать метод <mark class="highliter">componentWillReceiveProps</mark>, в котором обновить или пересоздать карту, если свойства поменялись:</p>
+    <pre><code class="language-js line-numbers">
+      componentWillReceiveProps(newProps) {
+        const { center, zoom } = this.props;
+        if (newProps.center !== center || newProps.zoom !== zoom) {
+          this.map.setCenter(newProps.center, newProps.zoom);
+        }
+      }
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Вот нам и пригодился объект карты, который мы поместили в свойство <mark class="highliter">map</mark> в методе <mark class="highliter">componentDidMount</mark>. И мы воспользовались методом <mark class="highliter">setCenter</mark> (<a href="https://tech.yandex.ru/maps/doc/jsapi/2.1/ref/reference/Map-docpage/#setCenter">документация</a>), чтобы установить новый центр карты и новый масштаб, если что-то из них изменилось.</p>
+    <p>Еще правилом хорошего тона является обязательная «уборка» за собой внутри подобного компонента. Добавим метод <mark class="highliter">componentWillUnmount</mark>, в котором уничтожим карту методом <mark class="highliter">destroy</mark> (<a href="https://tech.yandex.ru/maps/doc/jsapi/2.1/ref/reference/Map-docpage/#destroy">документация</a>) из библиотеки:</p>
+    <pre><code class="language-js">
+      componentWillUnmount() {
+      this.map.destroy();
+    }
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Стоит отметить, что нет необходимости оборачивать создание карты в функцию <mark class="highliter">ymaps.ready()</mark>, что мы делаем в <mark class="highliter">componentDidMount</mark>. Мы взяли его из примера в документации, но если прочитать документацию более внимательно:</p>
+    <p class="comment">Создавать карту следует после того, как веб-страница загрузится целиком. Это даст уверенность в том, что контейнер для карты создан и к нему можно обращаться по <mark class="highliter-comment">id</mark>. Чтобы инициализировать карту после загрузки страницы, можно воспользоваться функцией <mark class="highliter-comment">ready()</mark>.</p>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Очевидно, что компонент начинает монтироваться только после полной загрузки страницы, а <mark class="highliter">componentDidMount</mark> выполняется, когда компонент смонтирован, и к нему можно обращаться. Поэтому можно отказаться от <mark class="highliter">ymaps.ready()</mark> в <mark class="highliter">componentDidMount</mark>:</p>
+    <pre><code class="language-js line-numbers">
+      componentDidMount() {
+        const { center, zoom } = this.props;
+        this.map = new ymaps.Map('map', {
+          center,
+          zoom
+        });
+      }
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p><b>Вопрос:</b> Сколько можно поместить карт с помощью этого компонента на страницу? Почему?</p>
+    <p class="answer next">С помощью данного компонента можно поместить на страницу только одну карту, потому что в коде компонента зашит <mark class="highliter-comment">id</mark> контейнера карты. И если поместить второй компонент, он просто инициализруется в узел первого. Ну и возможны другие конфликты.</p>
+  </section>
+
+  <section class="slide" id="point-5">
+    <h2 class="slide-caption">Несколько карт<br> на странице</h2>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Мы решили частную задачу, но создали компонент, который имеет потенциальные проблемы в использовании. В программировании в целом и в React в частности такие проблемы — как бомба замедленного действия. Поэтому нужно стараться их избегать, создавая максимально независимый код.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Задача</h2>
+    <p>Доработать компонент <mark class="highliter">Map</mark>, чтобы иметь возможность добавлять на страницу несколько карт:</p>
+    <pre><code class="language-js">
+      &lt;Map center={[55.76, 37.64]} zoom={10} /&gt;
+      &lt;Map center={[53.21, 24.31]} zoom={12} /&gt;
+      &lt;Map center={[61.55, 40.18]} zoom={8} /&gt;
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2>Теория</h2>
+    <p><mark class="highliter">id</mark> должны быть уникальными для каждого элемента на странице, не должно быть повторений. Например, мы можем просто добавить возможность передать <mark class="highliter">id</mark> через <mark class="highliter">props</mark>. Но этим решением мы просто перекладываем ответственность на пользователя компонента, а не решаем проблему. Обратимся к документации конструктора <mark class="highliter">ymaps.Map</mark>:</p>
+    <p class="comment">Тип: Object|String. Ссылка на HTML-элемент, в котором размещается карта, или идентификатор этого HTML-элемента.</p>
+    <p>Получается, что вместо строки идентификатора мы можем передать сам элемент.</p>
+    <p>Для того чтобы получить ссылку на элемент контейнера карты в React, воспользуемся свойством <mark class="highliter">ref</mark>, которые мы ранее использовали для форм.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Решение</h2>
+    <p>Перепишем метод <mark class="highliter">render</mark>, убрав атрибут <mark class="highliter">id</mark> и добавив <mark class="highliter">ref</mark>, в котором поместим ссылку на DOM-элемент в свойство <mark class="highliter">node</mark> компонента:</p>
+    <pre><code class="language-js line-numbers">
+      render() {
+        return (
+          &lt;div ref={node => this.node = node}&gt;&lt;/div&gt;
+        );
+      }
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Теперь перепишем инциализацию карты, передав в <mark class="highliter">ymaps.Map</mark> вместо строки <mark class="highliter">'map'Map</mark> ссылку на элемент из <mark class="highliter">this.node</mark>:</p>
+    <pre><code class="language-js line-numbers">
+      componentDidMount() {
+        const { center, zoom } = this.props;
+        this.map = new ymaps.Map(this.node, {
+          center,
+          zoom
+        });
+      }
+    </code></pre>
+    <p>Убедимся что после этих изменений все работает так же. И попробуем теперь создать несколько карт, убедившись что каждая из них действует независимо без каких либо конфликтов.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Добивка</h2>
+    <p>Компоненты React подчиняются тем же правилам, что и обычные html-элементы. В том числе правилу уникальности идентификаторов.</p>
+    <p>Сейчас мы выявили еще один важный принцип интеграции: использовать <mark class="highliter">ref</mark> вместо косвенной адресации по <mark class="highliter">id</mark> или <mark class="highliter">class</mark> внутри компонента. Таким образом мы повышаем независимость компонентов, и снижаем риск возможных конфликтов.</p>
+  </section>
+
+  <section class="slide" id="point-6">
+    <h2 class="slide-caption">Интеграция с jQuery-плагином Chosen</h2>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Попробуем применить уже опробованные принципы интеграции, применив их для интеграции в React приложения библиотеки jQuery.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Задача</h2>
+    <p>Существует интернет-магазин одежды, интерфейс которого полностью построен с использованием библиотеки jQuery. В компании планируется переход на React, но разом переписать весь код невозможно, это слишком дорого.</p>
+    <p>Сейчас выбор размера на странице товара реализован при помощи jQuery-плагина <a href="https://harvesthq.github.io/chosen/" class="underline-none">Chosen</a>. Требуется написать обертку для этого плагина на React.</p>
+    <p class="comment">Chosen — плагин для создания более дружественных к пользователю полей выбора.</p>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Сейчас поле выбора инициализируется вот так:</p>
+    <pre><code class="language-js line-numbers">
+      &lt;select class="enhance"&gt;
+        &lt;option&gt;S&lt;/option&gt;
+        &lt;option&gt;M&lt;/option&gt;
+        &lt;option&gt;L&lt;/option&gt;
+      &lt;/select&gt;
+    </code></pre>
+
+    <pre><code class="language-js">
+      $('select.enhance').chosen();
+    </code></pre>
+    <p>Мы хотим чтобы все задачи по организации поля выбора решались в React-компоненте:</p>
+    <pre><code class="language-js line-numbers">
+      &lt;Chosen&gt;
+        &lt;option&gt;S&lt;/option&gt;
+        &lt;option&gt;M&lt;/option&gt;
+        &lt;option&gt;L&lt;/option&gt;
+      &lt;/Chosen&gt;
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2>Теория</h2>
+    <p>Мы можем получить внутри React-компонента ссылку на реальные узлы, созданные в методе <mark class="highliter">render()</mark> и помещенные в DOM-дерево документа через свойство <mark class="highliter">ref</mark>, после чего и манипулировать DOM-элементом через jQuery.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Решение</h2>
+    <p>Создадим класс компонента и метод <mark class="highliter">render</mark>:</p>
+    <pre><code class="language-js line-numbers">
+      class Chosen extends React.Component {
+        render() {
+          return (
+            &lt;div&gt;
+              &lt;select ref={el => this.root = el}&gt;
+                {this.props.children}
+              &lt;/select&gt;
+            &lt;/div&gt;
+          );
+        }
+      }
+    </code></pre>
+    <p>Тут мы помещаем ссылку на &lt;select&gt; в свойство <mark class="highliter">node</mark> компонента.</p>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Остается инициализировать плагин и уничтожить при удалении компонента:</p>
+    <pre><code class="language-js line-numbers">
+      componentDidMount() {
+        this.$root = $(this.root);
+        this.$root.chosen();
+      }
+
+      componentWillUnmount() {
+        this.$root.chosen('destroy');
+      }
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p><b>Вопрос:</b> Что такое <mark class="highliter">this.root</mark> в методе <mark class="highliter">componentDidMount</mark>?</p>
+    <p class="answer next">Если вы внимательно следили за реализацией, то помните, что это узел, соответствующий тегу <mark class="highliter-comment">&lt;select&gt;</mark>, который мы получили с помощью <mark class="highliter-comment">ref</mark> в методе <mark class="highliter-comment">render</mark>: <mark class="highliter-comment">&lt;select ref={el => this.root = el}&gt;…&lt;/select&gt;</mark>.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Добивка</h2>
+    <p>Если мы работаем с jQuery, то нам всегда нужно помнить об «оборачивании» обычных элементов в jQuery-элементы. Обернутые элементы еще обычно хранят в переменных или свойствах с префиксом <mark class="highliter">$</mark>.</p>
+    <p>В данном компоненте, чтобы не плодить свойства, в одном из которых сохранена ссылка на <mark class="highliter">&lt;select&gt;</mark> — <mark class="highliter">this.root</mark>, а во втором эта же ссылка, но обернутая в jQuery — <mark class="highliter">this.$root</mark>, можем обернуть узел сразу в ref-колбеке:</p>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <pre><code class="language-js line-numbers">
+      class Chosen extends React.Component {
+        render() {
+          return (
+            &lt;div&gt;
+      -       <mark class="no">&lt;select ref={el => this.root = el}&gt;</mark>
+      +       <mark class="yes">&lt;select ref={el => this.$root = $(el)}&gt;</mark>
+                {this.props.children}
+              &lt;/select&gt;
+            &lt;/div&gt;
+          );
+        }
+
+        componentDidMount() {
+      -   <mark class="no">this.$root = $(this.root);</mark>
+          this.$root.chosen();
+        }
+
+        componentWillUnmount() {
+          this.$root.chosen('destroy');
+        }
+      }
+    </code></pre>    
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Сейчас изменение списка размеров не влияет на работу плагина. Если у нашего компонента меняются дочерние элементы, то DOM-дерево обновляется. Но плагин Chosen не видит этих изменений. Для того чтобы заставить его обновитьс, нужно вызвать на элементе событие <mark class="highliter">chosen:update</mark>. Лучше всего это сделать в методе жизненного цикла <mark class="highliter">componentDidUpdate</mark>:</p>
+    <pre><code class="language-js line-numbers">
+      componentDidUpdate(prevProps) {
+        if (prevProps.children !== this.props.children) {
+          this.$root.trigger('chosen:updated');
+        }
+      }
+    </code></pre>
+  </section>
+
+  <section class="slide" id="point-7">
+    <h2 class="slide-caption">Исправление ошибки в компоненте Fotorama</h2>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Вернёмся к задаче фотогалереи. Давайте попробуем исправить наш компонент, чтобы он заработал. Ведь Fotorama по сути — это такой же jQuery плагин, как и Chosen.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Задача</h2>
+    <p>Напомню, мы реализовали компонент, который помещает фотографии на страницу, но фотогалерея из них не создается:</p>
+    <pre><code class="language-js line-numbers">
+      const Fotorama = ({ images }) => (
+        &lt;div className="fotorama"&gt;
+          {images.map(image => (
+            &lt;img src={image.src} key={image.id} /&gt;
+          ))}
+        &lt;/div&gt;
+      );
+    </code></pre>
+    <p>Исправим это и «оживим» галерею.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Теория</h2>
+    <p>Элементы, создаваемые React, появляются в DOM-дереве не одновременно с обычными html-элементами. Когда весь документ загружен, React-компоненты только начинают рендерится. Потому, если они используются другими бибилиотеками, требуется инициализировать эти библиотеки явно в методе <mark class="highliter">componentDidMount</mark> компонента.</p>
+    <p>Мы уже выясняли на примере карт подход к интеграции внешних библиотек в React: создаем DOM и инициализируем библиотеку в методе <mark class="highliter">componentDidMount</mark>. Также мы знаем, что лучше вместо класса у тега использовать прямую ссылку на элемент.</p>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Поэтому стратегия решения этой задачи состоит из следующих этапов:</p>
+    <ol>
+      <li>Переделать функциональный компонент в полноценный компонент на основе класса.</li>
+      <li>Получить ссылку на элемент, сохранить её в свойство компонента.</li>
+      <li>Инициализировать библиотеку Fotorama для этого элемента в методе <mark class="highliter">componentDidMount</mark>.</li>
+    </ol>
+  </section>
+
+  <section class="slide">
+    <h2>Решение</h2>
+    <p>Перепишем компонент таким образом, чтобы сохранить в нем ссылку на результирующий элемент. Сразу обернем её в jQuery объект:</p>
+    <pre><code class="language-js line-numbers">
+      class Fotorama extends React.Component {
+        render() {
+          return (
+            &lt;div ref={el => this.$root = $(el)}&gt;
+              {images.map((image, index) => (
+                &lt;img src={image.src} key={index} /&gt;
+              )}
+            &lt;/div&gt;
+          );
+        }
+      }
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Согласно документации, на элементе следует вызвать метод <mark class="highliter">fotorama()</mark>. Сделаем это после монтирования компонента:</p>
+    <pre><code class="language-js">
+      componentDidMount() {
+        this.$root.fotorama();
+      }
+    </code></pre>
+    <p>А также не забываем удалить модуль при удалении компонента.</p>
+    <p>Вот и всё. Теперь фотогалерея работает.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Добивка</h2>
+    <p>Как видите, следуя простым принципам и внимательно изучая документацию библиотек, мы можем интегрировать с React практически любую библиотеку.</p>
+  </section>
+
+  <section class="slide" id="point-8">
+    <h2 class="slide-caption">Передача событий<br> из jQuery</h2>
+  </section>
+
+  <section class="slide">
+    <h2>Задача</h2>
+    <p>Вернемся к нашему интернет-магазину и компоненту выбора размера, который оборачивает jQuery-плагин Chosen. Сейчас мы никак не можем обработать события выбора размера. Давайте доработаем компонент, чтобы мы могли обработать событие выбора и получить выбранное значение, примерно так:</p>
+    <pre><code class="language-js line-numbers">
+      &lt;Chosen onSelect={selectHandler}>
+        &lt;option&gt;S&lt;/option&gt;
+        &lt;option&gt;M&lt;/option&gt;
+        &lt;option&gt;L&lt;/option&gt;
+      &lt;/Chosen&gt;
+    </code></pre> 
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>При этом <mark class="highliter">selectHandler</mark> — функция, которая принимает выбранный размер, и, например, выводит его в консоль:</p>
+    <pre><code class="language-js">
+      const selectHandler = size => console.log(`Выбран размер ${size}!`);
+    </code></pre>
+    <p>В реальном приложении мы можем передать более полезный обработчик, который, например, обновит фотографию товара, соответствующую выбранному размеру.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Теория</h2>
+    <p>Передавать обработчики событий в другие библиотеки или модули ничем не отличается от процесса передачи обработчиков в DOM. Стратегия реализации точно такая же:</p>
+    <ol>
+      <li>Создаем метод в компоненте который будет обрабатывать событие.</li>
+      <li>Не забываем позаботиться о контексте вызова этого метода.</li>
+      <li>Подписываем метод на событие или передаём в настройки компонента.</li>
+    </ol>
+  </section>
+
+  <section class="slide">
+    <h2>Решение</h2>
+    <p>Добавим в наш компонент метод <mark class="highliter">handleChange</mark>, который будет вызываться при выборе одного из вариантов в плагине Chosen.</p>
+    <pre><code class="language-js line-numbers">
+      handleChange(event) {
+        const { onChange } = this.props;
+        if (!onChange) {
+          return;
+        }
+        onChange(event.target.value);
+      }
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Чтобы не иметь в дальнейшем проблем с контекстом вызова этого метода, «забиндим» его в конструкторе:</p>
+    <pre><code class="language-js line-numbers">
+      constructor(...args) {
+        super(...args);
+
+        this.handleChange = this.handleChange.bind(this);
+      }
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Теперь просто повесим его на событие <mark class="highliter">change</mark> нашего элемента. Так как мы уже используем jQuery и у нас есть «обёрнутый» элемент, воспользуемся его методами <mark class="highliter">on</mark> и <mark class="highliter">off</mark>:</p>
+    <pre><code class="language-js line-numbers">
+     componentDidMount() {
+      this.$root.chosen();
+      this.$root.on('change', this.handleChange);
+    }
+
+    componentWillUnmount() {
+      this.$root.off('change', this.handleChange);
+      this.$root.chosen('destroy');
+    } 
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2>Добивка</h2>
+    <p>Методы React-компонентов легко передавать как callback сторонним библиотекам и тем самым интегрировать их не только на уровне работы с DOM-деревом, но и на уровне обработки событий.</p>
+  </section>
+
+  <section class="slide" id="point-9">
+    <h2 class="slide-caption">Добавление на интерактивную карту точек</h2>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Вернёмся к нашему компоненту карты, добавим ему немного интерактива.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Задача</h2>
+    <p>Мы уже реализовали ранее компонент карты <mark class="highliter">Map</mark>. С того момента компания расширилась, и у неё появилось несколько офисов. Поэтому требуется показать их все на карте. А также при клике на одну из точек иметь возможность обработать выбранную точку:</p>
+    <pre><code class="language-js line-numbers">
+      &lt;Map
+        zoom={10}
+        center={[55.76, 37.64]}
+        points={offices}
+        onPointSelect={handlePoint} /&gt;
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Тут в переменной <mark class="highliter">offices</mark> у нас хранится массив точек, например такой:</p>
+    <pre><code class="language-js line-numbers">
+      const offices = [{
+        center: [55.76, 37.64],
+        title: 'Главный офис'
+      }, {
+        center: [57.21, 36.90],
+        title: 'Центральный склад'
+      }]
+    </code></pre>
+    <p>А функция <mark class="highliter">handlePoint</mark> может выглядеть как-то так:</p>
+    <pre><code class="language-js">const handlePoint = point => console.log(`Выбрана точка ${point.title}!`);</code></pre>
+  </section>
+
+  <section class="slide">
+    <h2>Теория</h2>
+    <p>Мы можем работать с сохраненным внутри компонента объектом карты как с любым другим. Вызывать его методы, которые определены во внешней библиотеке. Также мы можем методы компонента передавать в качестве обработчиков событий в объект карты или в её дочерние объекты.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Решение</h2>
+    <p>Начнём с реализации метода <mark class="highliter">handlePointClick</mark>, который будет обрабатывать клик по точке на карте:</p>
+    <pre><code class="language-js line-numbers">
+      handlePointClick(point) {
+        const { onPointSelect } = this.props;
+        if (!onPointSelect) {
+          return;
+        }
+        onPointSelect(point);
+      }
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Чтобы не иметь в дальнейшем проблем с контекстом вызова этого метода, «забиндим» его в конструкторе:</p>
+    <pre><code class="language-js line-numbers">
+      constructor(...args) {
+        super(...args);
+
+        this.handlePointClick = this.handlePointClick.bind(this);
+      }
+    </code></pre>
+    <p>Документация к API описывает, чтобы добавить метки на карту достаточно просто создать их с помощью конструктора <mark class="highliter">ymaps.Placemark</mark>, а потом добавить с помощью метода <mark class="highliter">add</mark> в свойстве <mark class="highliter">geoObjects</mark> карты.</p>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Реализуем это внутри метода <mark class="highliter">componentDidMount()</mark>:</p>
+    <pre><code class="language-js line-numbers">
+      componentDidMount() {
+        const { center, zoom, points } = this.props;
+        this.map = new ymaps.Map(this.node, {
+          center: this.props.center,
+          zoom: 10
+        });
+
+        const { geoObjects } = this.map;
+        points.forEach(point => {
+          const placemark = new ymaps.Placemark(point.center, {
+            hintContent: point.title
+          }, {
+            hasBalloon: false
+          });
+          placemark.events.add('click', () => this.handlePointClick(point));
+          geoObjects.add(placemark);
+        });
+      }
+    </code></pre>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Точки появились. При выборе выводится сообщение в консоль.</p>
+    <p>Если сравнить код решения с тем, что мы реализовали ранее для Chosen, то можно заметить, что отличия только в API самой интегрируемой библиотеки. В остальном реализация идентичная.</p>
+  </section>
+
+  <section class="slide">
+    <h2>Добивка</h2>
+    <p>Кроме прочего следите за тем, что свойствам компонента всегда можно задать значения по умолчанию, чтобы сделать их необязательными и настроить <mark class="highliter">PropTypes</mark>, чтобы с одной стороны сделать использование компонента более безопасным, а с другой — задокументировать его интерфейс.</p>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p>Давайте настроим некоторые свойства для нашего компонента карты:</p>
+    <pre><code class="language-js line-numbers">
+      Map.propTypes = {
+        onPointSelect: PropTypes.func,
+
+        zoom: PropTypes.number,
+        center: PropTypes.arrayOf(PropTypes.number).isRequired,
+        points: PropTypes.arrayOf(PropTypes.shape({
+          center: PropTypes.arrayOf(PropTypes.number).isRequired,
+          title: PropTypes.string
+        })),
+      };
+
+      Map.defaultProps = {
+        zoom: 10
+      };
+    </code></pre>
+  </section>
+
+  <section class="slide" id="point-10">
+    <h2 class="slide-caption">Выводы</h2>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <p><b>React</b> — весьма универсальная библиотека, которая может быть легко интегрирована в практически любое приложение. Для этого нужно следовать простым принципам:</p>
+    <ol class="start">
+      <li>Используйте для интеграции и обертывания компоненты на основе классов.</li>
+      <li>Используйте прямую ссылку на DOM-узлы, используя свойство <mark class="highliter">ref</mark> вместо поиска по идентификатору или классу.</li>
+      <li>Инициализируйте и обновляйте состояние стороннего плагина в методах жизненного цикла компонента <mark class="highliter">componentDidMount</mark>, <mark class="highliter">componentDidUpdate</mark>, <mark class="highliter">componentWillReceiveProps</mark> и другие.</li>
+      <li>Передавайте методы компонента в качестве обработчика событий в плагин. Не забывайте о контексте вызова.</li>
+    </ol>
+  </section>
+
+  <section class="slide">
+    <h2></h2>
+    <ol class="continue">
+      <li>Не забывайте «прибрать» за собой, уничтожив всё что создал плагин и все обработчики событий в методе <mark class="highliter">componentWillUnmount</mark>.</li>
+      <li>Внимательно изучайте документацию библиотек, чтобы сделать интеграцию правильно.</li>
+      <li>Настраивайте для компонента значения свойств по умолчанию (<mark class="highliter">defaultProps</mark>) и валидацию критичных свойств (<mark class="highliter">propTypes</mark>).</li>
+    </ol>
+  </section>
+
+  <section class="slide last author contacts">
+    <p class="thanx">Задавайте вопросы и напишите отзыв о лекции!</p>
+    <h1>Дмитрий Фитискин</h1>
+    <ul class="fa ul">
+      <li><a href="mailto:" class="fa-icon"></a><i class="far fa-envelope"></i><a href="mailto:">e-mail</a></li>
+      <li><a href="http://facebook.com/dfitiskin" class="fa-icon"><i class="fab fa-facebook"></a></i><a href="http://facebook.com/dfitiskin">facebook.com/dfitiskin</a></li>
+    </ul>
+  </section>
+  <div class="progress"></div>
+  <script src="node_modules/shower-core/shower.min.js"></script>
+  <script src="js/prism.js?v=2"></script>
+  <script src="js/prism-react.js"></script>
+  <script src="https://use.fontawesome.com/30b5a52164.js"></script>
+</body>
+</html>
