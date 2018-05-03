@@ -128,7 +128,3 @@ code.font-func-minimize span.token.keyword,
 code.font-func-minimize span.token.function {
 	font-size: 1em;
 }
-
-code.font-func-minimize span.token.class-name {
-	font-size: 0.9em;
-}
