@@ -94,3 +94,37 @@ mark.no {
 	background-color: #ffe4e1;
 	color: #b31d28;
 }
+
+/*Уменьшаем шрифт кода, чтобы строка помещалась на слайд без прокрутки*/
+/*Слайд №21 и №29*/
+.font-string-minimize {
+	font-size: 0.6em;
+}
+
+section.string-minimize span.token.string,
+section.string-minimize span.token.operator {
+	font-size: 0.93em;
+}
+
+/*Слайды №63 и №71*/
+.font-func-minimize {
+	font-size: 0.7em;
+}
+
+code.font-func-minimize span.token.interpolation,  
+code.font-func-minimize span.token.operator, 
+code.font-func-minimize span.token.punctuation, 
+code.font-func-minimize span.token.space, 
+code.font-func-minimize span.token.interpolation.punctuation.punctuation {
+	font-size: 0.95em;
+}
+
+code.font-func-minimize span.token.string,
+code.font-func-minimize span.token.interpolation {
+	font-size: 0.9em;
+}
+
+code.font-func-minimize span.token.keyword,
+code.font-func-minimize span.token.function {
+	font-size: 1em;
+}
